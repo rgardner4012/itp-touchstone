@@ -46,20 +46,3 @@ with open("output.csv", "w") as file:
     
 driver.quit()
 
-
-# # Check if the request was successful
-# if session.status_code == 200:
-#     # Parse the HTML content using BeautifulSoup
-#     soup = BeautifulSoup(r.content, "html.parser")
-#     print(soup)
-#     # Find the relevant section of the page. For now, just print
-#     # the body of the page
-#     body_content = soup.find("body")
-#     if body_content:
-#         # print relevant content
-#         print("****BODY****")
-#         print(body_content.text)
-#     else:
-#         print("Couldn't find the body content.")
-# else:
-#     print(f"Failed to retrieve the page. Status code: {response.status_code}")
