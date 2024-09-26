@@ -1,5 +1,6 @@
 {pkgs}: {
   deps = [
+    pkgs.openssh
     pkgs.vim
     pkgs.zlib
     pkgs.xcodebuild
