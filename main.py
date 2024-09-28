@@ -8,8 +8,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 from bs4 import BeautifulSoup as bs
 import csv
-#from consolemenu import *
-#from consolemenu.items import *
 from simple_term_menu import TerminalMenu
 from prompt import Prompt
 import pandas as pd
@@ -35,32 +33,21 @@ school_tables = {
     "WGU Additional Courses": '//*[@id="pageContent"]/span/span/builder-content/builder-blocks/div/div/builder-component-element/div/div/div/div/div/div/div[3]/div/div/div[2]/div/div/div/div/div/div/div[2]/wgu-tpa-table/table[2]/tbody',
   },
 }
+# Setup the dataframes for each school
 school_dfs = { k: pd.DataFrame( columns=["WGU_Class","Credits", f"{k}"]) for k in school_set }
-#print(school_dfs)
-#   "sophia": pd.DataFrame(columns=["WGU_Class","Credits","transferable"]),
-#   "studycom": pd.DataFrame(columns=["WGU_Class","Credits","transferable"]),
-#   "saylor": pd.DataFrame(columns=["WGU_Class","Credits","transferable"]),
-# }
+
+# Setup the Chrome driver options, and configure the driver
 options = Options()
 options.add_argument('--no-sandbox')
 options.add_argument('--headless')
 options.add_argument('--disable-dev-shm-usage')
-
 options.add_argument("start-maximized"); 
 options.add_argument("disable-infobars"); 
 options.add_argument("--disable-extensions"); 
 options.add_argument("--disable-gpu"); 
 options.add_argument("--disable-dev-shm-usage"); 
-
 driver = webdriver.Chrome(options=options)
 driver.implicitly_wait(5)
-
-# driver = webdriver.Chrome(ChromeDriverManager().install())
-
-
-# # Moved temporarily
-#   with open("output.csv", "w") as file:
-#   writer = csv.writer(file)
 
 # Get the page at the given URL
 def get_url(url):
@@ -69,6 +56,7 @@ def get_url(url):
 
 # Get the table data from the page
 def get_table_data(school, table, df):
+  # ingest table data, read rows, read each cell, build a list of lists with the row/data, then add to the dataframe.
   table_body = driver.find_element(By.XPATH, table)
   table_rows = table_body.find_elements(By.TAG_NAME, "tr")
   all_rows = []
@@ -78,14 +66,11 @@ def get_table_data(school, table, df):
     for data in table_data:
       row_data.append(data.text)
     all_rows.append(row_data)
-  #print("All Rows: ", all_rows) 
   new_df = pd.DataFrame(all_rows, columns=["WGU_Class", "Credits", f"{school}"])
   df = pd.concat([df, new_df], ignore_index=True)
-  #df = df._append(new_df, ignore_index=True)
-  #print(df)
   return df
 
-# Get the data from the page and add it to the school_data dictionary
+# Get the data from the page and add it to the school_data dictionary to seperate the data by school
 def get_school_data(school="all"):
   school_data = {}
   if school == "all":
@@ -95,44 +80,30 @@ def get_school_data(school="all"):
       for table in school_tables[school].values():
         school_dfs[school] = get_table_data(school, table, school_dfs[school])
     for school in school_dfs.keys():
-
       all_results = pd.merge(school_dfs[school], all_results, on=["WGU_Class", "Credits"], how="outer")
-      # for table in f"{school}_tables":
-      #   school_data == pd.concat(get_table_data(table, school_data[school]))
     return all_results
   else:
     df = pd.DataFrame(columns=["WGU_Class", "Credits", f"{school}"])
     print("School: ", school)
     school_page = get_url(url_set[school])
     for table in school_tables[school].values():
-      #print("Table: ", table, "from school: ", school, "tables: ", school_tables[school])
       school_dfs[school] = get_table_data(school, table, school_dfs[school])
-  #school_data[school] = get_table_data(table, school_dfs[school])
   return school_dfs
-# Build a list of classes from the given school, Any school should work as all classes should be the same      
-# def build_class_list(school="sophia"):
-#   class_list = []
-  
-#   resp = get_url(url_set[school])
-#   tables = sophia_tables if school == "sophia" else studycom_tables if school == "studycom" else saylor_tables
-#   for table in tables:
-#     get_table_data(table)
-#     class_list.append((school, table))
-#   return class_list
 
 # Select the school(s) you're interested in transferring credits from
 def school_selection():
   print("Select school(s) your interested in transferring credits from")
   options = ["all", "sophia", "studycom", "saylor"]
-  #options = ["All", "WGU General Ed Courses", "WGU Core Courses", "WGU Additional Courses"]
   selection = Prompt.menu(options)
   return selection
 
-
+# Get the schools the user is interested in
 school_sel = school_selection()
 
-print(school_sel)
+print(school_sel) # Debugging, left in for clarity
+# Get the data for the selected school(s) into the results dataframe
 results = get_school_data(school_sel)
+# branching for all vs specific school
 if school_sel == "all":
   print(results)
   with open("output.csv", "w") as file:
@@ -141,53 +112,8 @@ else:
   print(results[school_sel])
   with open("output.csv", "w") as file:
     results[school_sel].to_csv(file)
+
+# Close the driver
 driver.quit()
-
-  # tables = sophia_tables if school == "sophia" else studycom_tables if school == "studycom" else saylor_tables if school == "saylor" else 
-  # for table in tables:
-  #   print(table)
-
-
-  #   driver.get(url)
-  #   table_body = driver.find_element(By.XPATH, table)
-  #   table_rows = table_body.find_elements(By.TAG_NAME, "tr")
-  #   with open("output.csv", "w") as file:
-  #     writer = csv.writer(file)
-  #     for row in table_rows:
-  #       table_data = row.find_elements(By.TAG_NAME, "td")
-  #       row_data =  []
-  #       for data in table_data:
-  #         row_data.append(data.text)
-  #       writer.writerow(row_data)
-  #   driver.quit()
-
-
-# options = Options()
-# options.add_argument('--no-sandbox')
-# options.add_argument('--headless')
-# options.add_argument('--disable-dev-shm-usage')
-
-# options.add_argument("start-maximized"); 
-# options.add_argument("disable-infobars"); 
-# options.add_argument("--disable-extensions"); 
-# options.add_argument("--disable-gpu"); 
-# options.add_argument("--disable-dev-shm-usage"); 
-
-# driver = webdriver.Chrome(options=options)
-# driver.implicitly_wait(5)
-
-# driver.get(url)
-# table_body = driver.find_element(By.XPATH, '/html/body/app-root/div/builder-component[2]/span/span/builder-content/builder-blocks/div/div/builder-component-element/div/div/div/div/div/div/div[3]/div/div/div[2]/div/div/div/div/div/div/div[2]/wgu-tpa-table/table[1]/tbody')
-# table_rows = table_body.find_elements(By.TAG_NAME, "tr")
-# with open("output.csv", "w") as file:
-#   writer = csv.writer(file)
-  
-#   for row in table_rows:
-#     table_data = row.find_elements(By.TAG_NAME, "td")
-#     row_data =  []
-#     for data in table_data:
-#       row_data.append(data.text)
-#     writer.writerow(row_data)
-    
 
 
