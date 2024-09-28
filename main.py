@@ -89,10 +89,17 @@ def get_table_data(school, table, df):
 def get_school_data(school="all"):
   school_data = {}
   if school == "all":
-    for school in url_set.keys():
+    all_results = pd.DataFrame(columns=["WGU_Class", "Credits"])
+    for school in school_set:
       school_page = get_url(url_set[school])
-      for table in f"{school}_tables":
-        school_data == pd.concat(get_table_data(table, school_data[school]))
+      for table in school_tables[school].values():
+        school_dfs[school] = get_table_data(school, table, school_dfs[school])
+    for school in school_dfs.keys():
+
+      all_results = pd.merge(school_dfs[school], all_results, on=["WGU_Class", "Credits"], how="outer")
+      # for table in f"{school}_tables":
+      #   school_data == pd.concat(get_table_data(table, school_data[school]))
+    return all_results
   else:
     df = pd.DataFrame(columns=["WGU_Class", "Credits", f"{school}"])
     print("School: ", school)
@@ -123,9 +130,17 @@ def school_selection():
 
 
 school_sel = school_selection()
+
 print(school_sel)
 results = get_school_data(school_sel)
-print(results[school_sel])
+if school_sel == "all":
+  print(results)
+  with open("output.csv", "w") as file:
+    results.to_csv(file)
+else:
+  print(results[school_sel])
+  with open("output.csv", "w") as file:
+    results[school_sel].to_csv(file)
 driver.quit()
 
   # tables = sophia_tables if school == "sophia" else studycom_tables if school == "studycom" else saylor_tables if school == "saylor" else 
