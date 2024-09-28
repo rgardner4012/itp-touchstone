@@ -35,7 +35,7 @@ school_tables = {
     "WGU Additional Courses": '//*[@id="pageContent"]/span/span/builder-content/builder-blocks/div/div/builder-component-element/div/div/div/div/div/div/div[3]/div/div/div[2]/div/div/div/div/div/div/div[2]/wgu-tpa-table/table[2]/tbody',
   },
 }
-school_dfs = { k: pd.DataFrame( columns=["WGU_Class","Credits","transferable"]) for k in school_set }
+school_dfs = { k: pd.DataFrame( columns=["WGU_Class","Credits", f"{k}"]) for k in school_set }
 #print(school_dfs)
 #   "sophia": pd.DataFrame(columns=["WGU_Class","Credits","transferable"]),
 #   "studycom": pd.DataFrame(columns=["WGU_Class","Credits","transferable"]),
@@ -68,7 +68,7 @@ def get_url(url):
   return driver
 
 # Get the table data from the page
-def get_table_data(table, df):
+def get_table_data(school, table, df):
   table_body = driver.find_element(By.XPATH, table)
   table_rows = table_body.find_elements(By.TAG_NAME, "tr")
   all_rows = []
@@ -79,7 +79,7 @@ def get_table_data(table, df):
       row_data.append(data.text)
     all_rows.append(row_data)
   #print("All Rows: ", all_rows) 
-  new_df = pd.DataFrame(all_rows, columns=["WGU_Class","Credits","transferable"])
+  new_df = pd.DataFrame(all_rows, columns=["WGU_Class", "Credits", f"{school}"])
   df = pd.concat([df, new_df], ignore_index=True)
   #df = df._append(new_df, ignore_index=True)
   #print(df)
@@ -94,12 +94,12 @@ def get_school_data(school="all"):
       for table in f"{school}_tables":
         school_data == pd.concat(get_table_data(table, school_data[school]))
   else:
-    df = pd.DataFrame(columns=["WGU_Class","Credits","transferable"])
+    df = pd.DataFrame(columns=["WGU_Class", "Credits", f"{school}"])
     print("School: ", school)
     school_page = get_url(url_set[school])
     for table in school_tables[school].values():
       #print("Table: ", table, "from school: ", school, "tables: ", school_tables[school])
-      school_dfs[school] = get_table_data(table, school_dfs[school])
+      school_dfs[school] = get_table_data(school, table, school_dfs[school])
   #school_data[school] = get_table_data(table, school_dfs[school])
   return school_dfs
 # Build a list of classes from the given school, Any school should work as all classes should be the same      
